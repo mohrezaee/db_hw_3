@@ -11,5 +11,5 @@ services:
       POSTGRES_USER: test
     ports:
       - 5432:5432
-    # volumes:
-    # - ./*.sql:/docker-entrypoint-initdb.d/
+    volumes:
+    - ./main.sql/:/docker-entrypoint-initdb.d/main.sql
