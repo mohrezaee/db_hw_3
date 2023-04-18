@@ -16,46 +16,53 @@ CREATE TABLE residence
     host_id INT,
     lat FLOAT NOT NULL,
     long FLOAT NOT NULL,
-    not_rentable date,
-    -- could have more than one value, & , should be an interval
-    price int NOT NULL,
+    price int NOT NULL CHECK (price > 0),
     capacity int NOT NULL,
-    rooms_count int NOT NULL,
-    pictures_links varchar(50),
-    -- wtf: links of images, could be more than one
-    residence_type varchar(50) NOT NULL,
-    -- could be enum(domain)
+    room_count int NOT NULL CHECK (price > 0),
+    residence_type varchar(16) NOT NULL CHECK (
+        residence_type in ('aplartment', 'villa', 'hotel-appartment', 'ecotourism')
+        ),
     province VARCHAR(50) NOT NULL,
     city VARCHAR(50) NOT NULL,
-    area FLOAT NOT NULL,
+    area FLOAT NOT NULL CHECK (area > 0),
     residence_address text NOT NULL,
-    first_picture_link varchar(50),
+    first_picture_link VARCHAR(100),
     confirmed bit NOT NULL DEFAULT 0,
-    establishment_interval date,
-    -- should be interval
+    country_side bit NOT NULL DEFAULT 0,
+    establishment_from date NOT NULL,
+    establishment_to date not NULL,
     bed_type VARCHAR(50) NOT NULL,
-    -- could be enum
-    bed_count INT NOT NULL,
+    bed_count INT NOT NULL CHECK (bed_count >= 0) DEFAULT 0,
     cancellation_politic VARCHAR(100),
     -- not sure at all
-    cancellation_cost INT NOT NULL,
+    cancellation_cost INT NOT NULL CHECK (cancellation_cost >= 0),
 
     PRIMARY KEY (lat, long),
-    FOREIGN KEY (host_id) REFERENCES host(national_code)
+    FOREIGN KEY (host_id) REFERENCES host(national_code),
 );
+
+CREATE TABLE picture
+(
+    link VARCHAR(100) PRIMARY KEY,
+    residence_id serial,
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
+);
+
+ALTER TABLE residence ADD FOREIGN KEY (first_picture_link) REFERENCES picture(link);
 
 CREATE TABLE not_rentable_ranges
 (
     range_from DATE NOT NULL,
     range_to DATE NOT NULL,
     residence_id serial,
-    PRIMARY KEY(range_from, range_to),
+    PRIMARY KEY(range_from, range_to, residence_id),
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
 );
 
 CREATE TABLE facility
 (
     facility_name VARCHAR(50) PRIMARY KEY,
+    caption text,
     residence_id serial UNIQUE,
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id),
 );
@@ -64,42 +71,39 @@ CREATE TABLE price_change
 (
     change_from DATE not NULL,
     change_to DATE NOT NULL,
-    change_type VARCHAR(50) NOT NULL,
-    -- could be enum
-    change_percentage INT NOT NULL,
+    change_type VARCHAR(8) NOT NULL CHECK(change_type in ('increase', 'discount')),
+    change_percentage INT NOT NULL CHECK (change_percentage > 0),
     residence_id serial UNIQUE,
     PRIMARY KEY (change_from, change_to, change_type, change_percentage),
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id),
 );
 
-CREATE TABLE passenger
+CREATE TABLE guest
 (
-    national_code INT PRIMARY KEY,
+    national_code VARCHAR(10) PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
+    -- check phone number length
     phone_number VARCHAR(11) NOT NULL UNIQUE,
-    -- constraint for phone number format
-    balance INT NOT NULL,
+    balance INT NOT NULL CHECK
+    (balance > 0),
 );
 
 CREATE TABLE rent
 (
-    rent_id serial UNIQUE,
+    rent_id serial,
     rent_from DATE not NULL,
     rent_to DATE NOT NULL,
-    rent_type VARCHAR(50) NOT NULL,
-    -- could be enum
-    rent_percentage INT NOT NULL,
-    residence_id serial UNIQUE,
-    passenger_id int,
+    residence_id serial,
+    guest_id VARCHAR(10),
     confirmed bit NOT NULL DEFAULT 0,
     total_cost INT NOT NULL,
-    passengers_count INT NOT NULL,
-    cancellation_caption VARCHAR(50),
+    guest_count INT NOT NULL,
+    cancellation_caption VARCHAR(100),
     cancellation_forgiven_percentage_money INT,
     PRIMARY KEY (rent_from, rent_to),
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id),
-    FOREIGN KEY (passenger_id) REFERENCES passenger(national_code),
+    FOREIGN KEY (guest_id) REFERENCES guest(national_code),
 );
 
 CREATE TABLE complaint
@@ -108,7 +112,7 @@ CREATE TABLE complaint
     confirmed bit NOT NULL DEFAULT 0,
     caption VARCHAR(50),
     complaint_type VARCHAR(50),
-    residence_id serial UNIQUE,
+    residence_id serial,
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id),
 );
 
@@ -117,7 +121,7 @@ CREATE TABLE damage
     id int PRIMARY KEY,
     confirmed bit NOT NULL DEFAULT 0,
     caption VARCHAR(50),
-    residence_id serial UNIQUE,
+    residence_id serial,
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id),
 );
 
@@ -127,7 +131,7 @@ CREATE TABLE comment
     rating int not NULL,
     commenter_type VARCHAR(50) NULL,
     caption VARCHAR(50),
-    residence_id serial UNIQUE,
+    residence_id serial,
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id),
 );
 
@@ -136,11 +140,10 @@ CREATE TABLE message
     sent_time date PRIMARY KEY,
     content text not NULL,
     seen bit NOT NULL DEFAULT 0,
-    passenger_id int,
+    guest_id int,
     host_id int,
-    sender VARCHAR(20) NOT NULL,
-    -- host or passernger
-    FOREIGN KEY (passenger_id) REFERENCES passenger(national_code),
+    sender VARCHAR(5) NOT NULL CHECK(sender in ('host', 'guest')),
+    FOREIGN KEY (guest_id) REFERENCES guest(national_code),
     FOREIGN KEY (host_id) REFERENCES host(national_code),
 );
 
