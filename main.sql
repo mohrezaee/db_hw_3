@@ -9,6 +9,12 @@ CREATE TABLE IF NOT EXISTS host
     CHECK (length(national_code) = 10 )
 );
 
+CREATE TABLE IF NOT EXISTS city
+(
+    city_id serial PRIMARY KEY,
+    city_name varchar(50)
+)
+
 CREATE TABLE IF NOT EXISTS residence
 (
     residence_id serial UNIQUE,
@@ -22,7 +28,7 @@ CREATE TABLE IF NOT EXISTS residence
         residence_type in ('apartment', 'villa', 'hotel-apartment', 'ecotourism')
         ),
     province varchar(50) NOT NULL,
-    city varchar(50) NOT NULL,
+    city_id int,
     area float NOT NULL CHECK (area > 0),
     residence_address text NOT NULL,
     first_picture_link varchar(100),
@@ -30,12 +36,11 @@ CREATE TABLE IF NOT EXISTS residence
     country_side boolean NOT NULL DEFAULT False,
     establishment_from timestamp NOT NULL,
     establishment_to timestamp not NULL,
-    bed_type varchar(50) NOT NULL,
-    bed_count int NOT NULL CHECK (bed_count >= 0) DEFAULT 0,
     cancellation_politic varchar(100),
     cancellation_cost int NOT NULL CHECK (cancellation_cost >= 0),
 
     PRIMARY KEY (lat, long),
+    FOREIGN KEY (city_id) REFERENCES city(city_id),
     FOREIGN KEY (host_id) REFERENCES host(national_code)
 );
 
@@ -59,9 +64,33 @@ CREATE TABLE IF NOT EXISTS not_rentable_ranges
 
 CREATE TABLE IF NOT EXISTS facility
 (
-    facility_name varchar(50) PRIMARY KEY,
+    facility_id serial PRIMARY KEY,
+    facility_name varchar(50),
     caption text,
-    residence_id serial UNIQUE UNIQUE,
+);
+
+CREATE TABLE IF NOT EXISTS residence_facility
+(
+    residence_facility_id serial PRIMARY KEY,
+    facility_id int,
+    residence_id serial UNIQUE,
+    FOREIGN KEY (facility_id) REFERENCES facility(facility_id)
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
+);
+
+CREATE TABLE IF NOT EXISTS bed
+(
+    bed_id serial PRIMARY KEY,
+    bed_name varchar(50),
+);
+
+CREATE TABLE IF NOT EXISTS residence_bed
+(
+    residence_bed_id serial PRIMARY KEY,
+    bed_id int,
+    count int,
+    residence_id int,
+    FOREIGN KEY (bed_id) REFERENCES bed(bed_id),
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
 );
 
@@ -71,7 +100,7 @@ CREATE TABLE IF NOT EXISTS price_change
     change_to timestamp NOT NULL,
     change_type varchar(8) NOT NULL CHECK(change_type in ('increase', 'discount')),
     change_percentage int NOT NULL CHECK (change_percentage > 0),
-    residence_id serial UNIQUE UNIQUE,
+    residence_id serial UNIQUE,
     PRIMARY KEY (change_from, change_to, change_type, change_percentage),
     FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
 );
