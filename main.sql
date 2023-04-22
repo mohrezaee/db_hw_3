@@ -40,18 +40,18 @@ CREATE TABLE IF NOT EXISTS residence
     cancellation_cost int NOT NULL CHECK (cancellation_cost >= 0),
 
     PRIMARY KEY (lat, long),
-    FOREIGN KEY (city_id) REFERENCES city(city_id),
-    FOREIGN KEY (host_id) REFERENCES host(national_code)
+    FOREIGN KEY (city_id) REFERENCES city(city_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (host_id) REFERENCES host(national_code) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS picture
 (
     link VARCHAR(100) PRIMARY KEY,
-    residence_id serial UNIQUE,
-    FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
+    residence_id int,
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-ALTER TABLE residence ADD FOREIGN KEY (first_picture_link) REFERENCES picture(link);
+ALTER TABLE residence ADD FOREIGN KEY (first_picture_link) REFERENCES picture(link) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE IF NOT EXISTS not_rentable_ranges
 (
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS not_rentable_ranges
     range_to timestamp NOT NULL,
     residence_id serial UNIQUE,
     PRIMARY KEY(range_from, range_to, residence_id),
-    FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS facility
@@ -74,14 +74,14 @@ CREATE TABLE IF NOT EXISTS residence_facility
     residence_facility_id serial PRIMARY KEY,
     facility_id int,
     residence_id serial UNIQUE,
-    FOREIGN KEY (facility_id) REFERENCES facility(facility_id)
-    FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
+    FOREIGN KEY (facility_id) REFERENCES facility(facility_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS bed
 (
     bed_id serial PRIMARY KEY,
-    bed_name varchar(50),
+    bed_name varchar(50)
 );
 
 CREATE TABLE IF NOT EXISTS residence_bed
@@ -90,8 +90,8 @@ CREATE TABLE IF NOT EXISTS residence_bed
     bed_id int,
     count int,
     residence_id int,
-    FOREIGN KEY (bed_id) REFERENCES bed(bed_id),
-    FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
+    FOREIGN KEY (bed_id) REFERENCES bed(bed_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS price_change
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS price_change
     change_percentage int NOT NULL CHECK (change_percentage > 0),
     residence_id serial UNIQUE,
     PRIMARY KEY (change_from, change_to, change_type, change_percentage),
-    FOREIGN KEY (residence_id) REFERENCES residence(residence_id)
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS guest
@@ -127,8 +127,8 @@ CREATE TABLE IF NOT EXISTS rent
     cancellation_caption varchar(100),
     cancellation_forgiven_percentage_money int,
     PRIMARY KEY (rent_from, rent_to),
-    FOREIGN KEY (residence_id) REFERENCES residence(residence_id),
-    FOREIGN KEY (guest_id) REFERENCES guest(national_code)
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (guest_id) REFERENCES guest(national_code) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS complaint
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS complaint
     caption varchar(50),
     complaint_type varchar(50),
     rent_id serial UNIQUE,
-    FOREIGN KEY (rent_id) REFERENCES rent(rent_id)
+    FOREIGN KEY (rent_id) REFERENCES rent(rent_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS damage
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS damage
     confirmed boolean NOT NULL DEFAULT False,
     caption varchar(50),
     rent_id serial UNIQUE,
-    FOREIGN KEY (rent_id) REFERENCES rent(rent_id)
+    FOREIGN KEY (rent_id) REFERENCES rent(rent_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS comment
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS comment
     commenter_type varchar(50) not NULL CHECK (commenter_type in ('host', 'guest')),
     caption varchar(50),
     rent_id serial UNIQUE,
-    FOREIGN KEY (rent_id) REFERENCES rent(rent_id)
+    FOREIGN KEY (rent_id) REFERENCES rent(rent_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS message
@@ -168,6 +168,6 @@ CREATE TABLE IF NOT EXISTS message
     guest_id varchar(10),
     host_id varchar(10),
     sender varchar(5) NOT NULL CHECK(sender in ('host', 'guest')),
-    FOREIGN KEY (guest_id) REFERENCES guest(national_code),
-    FOREIGN KEY (host_id) REFERENCES host(national_code)
+    FOREIGN KEY (guest_id) REFERENCES guest(national_code) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (host_id) REFERENCES host(national_code) ON DELETE CASCADE ON UPDATE CASCADE
 );
