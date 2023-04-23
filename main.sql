@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS residence
     long float NOT NULL,
     price int NOT NULL CHECK (price > 0),
     capacity int NOT NULL,
-    room_count int NOT NULL CHECK (price > 0),
+    room_count int NOT NULL CHECK (room_count > 0),
     residence_type varchar(16) NOT NULL CHECK (
         residence_type in ('apartment', 'villa', 'hotel-apartment', 'ecotourism')
         ),
