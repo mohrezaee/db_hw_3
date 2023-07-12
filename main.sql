@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS city
 (
     city_id serial PRIMARY KEY,
     city_name varchar(50)
-)
+);
 
 CREATE TABLE IF NOT EXISTS residence
 (
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS facility
 (
     facility_id serial PRIMARY KEY,
     facility_name varchar(50),
-    caption text,
+    caption text
 );
 
 CREATE TABLE IF NOT EXISTS residence_facility
@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS rent
     confirmed boolean NOT NULL DEFAULT False,
     total_cost int NOT NULL,
     guest_count int NOT NULL,
+	canceled boolean DEFAULT False,
     cancellation_caption varchar(100),
     cancellation_forgiven_percentage_money int,
     PRIMARY KEY (rent_from, rent_to),
@@ -153,6 +154,7 @@ CREATE TABLE IF NOT EXISTS damage
 CREATE TABLE IF NOT EXISTS comment
 (
     id int PRIMARY KEY,
+	sent_time timestamp,
     rating int not NULL,
     commenter_type varchar(50) not NULL CHECK (commenter_type in ('host', 'guest')),
     caption varchar(50),
@@ -171,3 +173,45 @@ CREATE TABLE IF NOT EXISTS message
     FOREIGN KEY (guest_id) REFERENCES guest(national_code) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (host_id) REFERENCES host(national_code) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS earning
+(
+	earning_id int PRIMARY KEY,
+	balance int NOT NULL DEFAULT 0,
+	balance_year int NOT NULL DEFAULT 2023,
+	host_id varchar(10),
+	FOREIGN KEY (host_id) REFERENCES host(national_code) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+
+-- 9
+-- ======================
+SELECT residence.residence_id, residence.city_id , rent.total_cost, rent.rent_from, rent.rent_to
+FROM guest AS g
+INNER JOIN rent ON g.national_code = rent.guest_id
+INNER JOIN residence ON rent.residence_id = residence.residence_id
+WHERE rent.confirmed = True
+AND rent.canceled = False
+-- AND g.national_code = <guest_id>
+ORDER BY rent.rent_from DESC;
+-- ====================
+
+-- 10
+-- =======================
+SELECT guest.national_code , guest.first_name , guest.last_name , c.caption , c.rating , c.sent_time
+FROM comment AS c
+INNER JOIN rent ON c.rent_id = rent.rent_id
+INNER JOIN guest ON rent.guest_id = guest.national_code
+WHERE commenter_type = 'guest'
+-- AND rent.residence_id = <residence_id>
+ORDER BY c.sent_time ASC;
+-- ======================
+
+-- 11
+-- =======================
+SELECT h.first_name, h.last_name, earning.balance
+FROM host AS h
+INNER JOIN earning ON h.national_code = earning.host_id
+WHERE earning.balance_year = 2022
+ORDER BY earning.balance DESC
+LIMIT 20;
