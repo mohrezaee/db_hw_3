@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS city
 CREATE TABLE IF NOT EXISTS residence
 (
     residence_id serial UNIQUE,
+    title varchar(50), --Anita: ino ezafe kardm.
     host_id varchar(10),
     lat float NOT NULL,
     long float NOT NULL,
@@ -121,10 +122,11 @@ CREATE TABLE IF NOT EXISTS rent
     rent_to timestamp NOT NULL,
     residence_id serial UNIQUE,
     guest_id varchar(10),
-    confirmed boolean NOT NULL DEFAULT False,
+    -- confirmed boolean NOT NULL DEFAULT False,
+    status varchar(9) NOT NULL CHECK(status in ('rejected', 'confirmed', 'pending')) --Anita: ino ezafe kardam.
     total_cost int NOT NULL,
     guest_count int NOT NULL,
-	canceled boolean DEFAULT False,
+    canceled boolean DEFAULT False,
     cancellation_caption varchar(100),
     cancellation_forgiven_percentage_money int,
     PRIMARY KEY (rent_from, rent_to),
@@ -183,6 +185,38 @@ CREATE TABLE IF NOT EXISTS earning
 	FOREIGN KEY (host_id) REFERENCES host(national_code) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- 1
+-- ====================== Anita: in kamel nist.
+SELECT residence.residence_id, residence.title, residence.first_picture_link, residence.host_id, h.name
+FROM host AS h
+INNER JOIN residence ON residence.host_id = h.national_code
+WHERE residence.city = 'Tabriz'
+AND residence.capacity >= 4
+ORDER BY DESC
+
+-- 6
+-- ======================
+SELECT host.national_code, m.content, m.sent_time
+FROM message AS m
+INNER JOIN host on host.national_code = m.host_id
+-- WHERE message.guest_id = <guest_id>
+ORDER BY comment.sent_time DESC
+
+--7
+-- ======================
+SELECT host.national_code, m.content, m.sent_time
+FROM message AS m
+INNER JOIN host on host.national_code = m.host_id
+-- WHERE message.guest_id = <guest_id>
+-- AND message.host_id = <host_id>
+ORDER BY comment.sent_time DESC
+
+-- 8
+-- ======================
+SELECT rent.guest_id, g.first_name, g.last_name, rent.guest_count, rent.rent_from, rent.rent_to
+FROM guest AS g
+INNER JOIN rent ON rent.guest_id = guest.national_code
+WHERE rent.status = 'pending'
 
 -- 9
 -- ======================
@@ -190,7 +224,8 @@ SELECT residence.residence_id, residence.city_id , rent.total_cost, rent.rent_fr
 FROM guest AS g
 INNER JOIN rent ON g.national_code = rent.guest_id
 INNER JOIN residence ON rent.residence_id = residence.residence_id
-WHERE rent.confirmed = True
+-- WHERE rent.confirmed = True
+WHERE rent.status = 'confirmed' --Anita: ino chon rent taghir dade boodm taghir dadm.
 AND rent.canceled = False
 -- AND g.national_code = <guest_id>
 ORDER BY rent.rent_from DESC;
@@ -201,7 +236,7 @@ ORDER BY rent.rent_from DESC;
 SELECT guest.national_code , guest.first_name , guest.last_name , c.caption , c.rating , c.sent_time
 FROM comment AS c
 INNER JOIN rent ON c.rent_id = rent.rent_id
-INNER JOIN guest ON rent.guest_id = guest.national_code
+INNER JOIN guest ON rent.guest_id = guest.national_code -- Anita: in lazeme??
 WHERE commenter_type = 'guest'
 -- AND rent.residence_id = <residence_id>
 ORDER BY c.sent_time ASC;
