@@ -218,6 +218,35 @@ FROM guest AS g
 INNER JOIN rent ON rent.guest_id = guest.national_code
 WHERE rent.status = 'pending'
 
+
+
+-- 1
+-- =======================
+
+SELECT r.residence_id, r.residence_type, r.first_picture_link, host.national_code , host.first_name , host.last_name
+FROM residence r INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id
+
+WHERE r.residence_id NOT IN
+
+(SELECT r.residence_id
+FROM residence r
+INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id)
+AND city.city_name = 'Tabriz' AND r.capacity >= 4
+ 
+-- AND rent.rent_from < y AND rent.rent_to > x
+
+ORDER BY (SELECT AVG(comment.rating) FROM residence res
+INNER JOIN comment ON res.residence_id = comment.residence_id
+WHERE res.residence_id = r.residence_id) DESC
+
+LIMIT 20;
+
+
+
 -- 9
 -- ======================
 SELECT residence.residence_id, residence.city_id , rent.total_cost, rent.rent_from, rent.rent_to
