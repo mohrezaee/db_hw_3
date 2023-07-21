@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS guest
 CREATE TABLE IF NOT EXISTS rent
 (
     rent_id serial UNIQUE,
-    rent_from timestamp not NULL,
+    rent_from timestamp not NULL, --Anita: ino taghir bedim be tarikh khali???
     rent_to timestamp NOT NULL,
     residence_id serial UNIQUE,
     guest_id varchar(10),
@@ -279,3 +279,26 @@ INNER JOIN earning ON h.national_code = earning.host_id
 WHERE earning.balance_year = 2022
 ORDER BY earning.balance DESC
 LIMIT 20;
+
+
+
+
+-- Trigger:
+CREATE Function check_availability() 
+    RETURNS TRIGGER 
+AS $check_availability$
+BEGIN
+    IF (SELECT count(*) FROM rent WHERE rent.rent_from = new.rent_from) <> 0  --Anita: rahe behtar hatman hast. aya ba timstamp kar mikone??
+    THEN 
+    RAISE EXCEPTION 'This accommodation is already reserved for this day.'
+    ELSE
+    RETURN new;
+    END IF;
+END;
+$check_availability$
+
+CREATE TRIGGER check_availability
+    BEFORE INSERT OR UPDATE
+    ON rent
+    FOR EACH ROW
+    EXECUTE PROCEDURE check_availability()
