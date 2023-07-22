@@ -185,40 +185,6 @@ CREATE TABLE IF NOT EXISTS earning
 	FOREIGN KEY (host_id) REFERENCES host(national_code) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- 1
--- ====================== Anita: in kamel nist.
-SELECT residence.residence_id, residence.title, residence.first_picture_link, residence.host_id, h.name
-FROM host AS h
-INNER JOIN residence ON residence.host_id = h.national_code
-WHERE residence.city = 'Tabriz'
-AND residence.capacity >= 4
-ORDER BY DESC
-
--- 6
--- ======================
-SELECT host.national_code, m.content, m.sent_time
-FROM message AS m
-INNER JOIN host on host.national_code = m.host_id
--- WHERE message.guest_id = <guest_id>
-ORDER BY comment.sent_time DESC
-
---7
--- ======================
-SELECT host.national_code, m.content, m.sent_time
-FROM message AS m
-INNER JOIN host on host.national_code = m.host_id
--- WHERE message.guest_id = <guest_id>
--- AND message.host_id = <host_id>
-ORDER BY comment.sent_time DESC
-
--- 8
--- ======================
-SELECT rent.guest_id, g.first_name, g.last_name, rent.guest_count, rent.rent_from, rent.rent_to
-FROM guest AS g
-INNER JOIN rent ON rent.guest_id = guest.national_code
-WHERE rent.status = 'pending'
-
-
 
 -- 1
 -- =======================
@@ -243,9 +209,57 @@ ORDER BY (SELECT AVG(comment.rating) FROM residence res
 INNER JOIN comment ON res.residence_id = comment.residence_id
 WHERE res.residence_id = r.residence_id) DESC
 
-LIMIT 20;
+LIMIT 20; --FETCH FIRST 20 ROW ONLY;
 
+-- 2
+-- =======================
 
+SELECT r.residence_id, r.residence_type, r.first_picture_link, host.national_code , host.first_name , host.last_name
+FROM residence r INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id
+
+WHERE r.residence_id NOT IN
+
+(SELECT r.residence_id
+FROM residence r
+INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id)
+AND city.city_name = 'Tabriz' AND r.capacity >= 4
+ 
+-- AND rent.rent_from < y AND rent.rent_to > x
+
+ORDER BY (SELECT AVG(comment.rating) FROM residence res
+INNER JOIN comment ON res.residence_id = comment.residence_id
+WHERE res.residence_id = r.residence_id) DESC
+
+OFFSET 20 ROWS
+FETCH FIRST 20 ROW ONLY; 
+
+-- 6
+-- ======================
+SELECT host.national_code, m.content, m.sent_time
+FROM message AS m
+INNER JOIN host on host.national_code = m.host_id
+-- WHERE message.guest_id = <guest_id>
+ORDER BY comment.sent_time DESC
+
+--7
+-- ======================
+SELECT host.national_code, m.content, m.sent_time
+FROM message AS m
+INNER JOIN host on host.national_code = m.host_id
+-- WHERE message.guest_id = <guest_id>
+-- AND message.host_id = <host_id>
+ORDER BY comment.sent_time DESC
+
+-- 8
+-- ======================
+SELECT rent.guest_id, g.first_name, g.last_name, rent.guest_count, rent.rent_from, rent.rent_to
+FROM guest AS g
+INNER JOIN rent ON rent.guest_id = guest.national_code
+WHERE rent.status = 'pending'
 
 -- 9
 -- ======================
