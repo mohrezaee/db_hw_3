@@ -161,6 +161,8 @@ CREATE TABLE IF NOT EXISTS comment
     commenter_type varchar(50) not NULL CHECK (commenter_type in ('host', 'guest')),
     caption varchar(50),
     rent_id serial UNIQUE,
+    residence_id serial,
+    FOREIGN KEY (residence_id) REFERENCES residence(residence_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (rent_id) REFERENCES rent(rent_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
