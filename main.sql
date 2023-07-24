@@ -111,9 +111,10 @@ CREATE TABLE IF NOT EXISTS guest
     national_code varchar(10) PRIMARY KEY,
     first_name varchar(50) NOT NULL,
     last_name varchar(50) NOT NULL,
-    phone_number varchar(11) NOT NULL UNIQUE CHECK (length(phone_number) = 11 ),
+    phone_number varchar(12) NOT NULL UNIQUE CHECK (length(phone_number) = 12 ),
     balance int NOT NULL DEFAULT 0
 );
+
 
 CREATE TABLE IF NOT EXISTS rent
 (
@@ -123,7 +124,7 @@ CREATE TABLE IF NOT EXISTS rent
     residence_id serial UNIQUE,
     guest_id varchar(10),
     -- confirmed boolean NOT NULL DEFAULT False,
-    status varchar(9) NOT NULL CHECK(status in ('rejected', 'confirmed', 'pending')) --Anita: ino ezafe kardam.
+    status varchar(9) NOT NULL CHECK(status in ('rejected', 'confirmed', 'pending')), --Anita: ino ezafe kardam.
     total_cost int NOT NULL,
     guest_count int NOT NULL,
     canceled boolean DEFAULT False,
@@ -191,7 +192,7 @@ CREATE TABLE IF NOT EXISTS earning
 -- 1
 -- =======================
 
-SELECT r.residence_id, r.residence_type, r.first_picture_link, host.national_code , host.first_name , host.last_name
+SELECT r.residence_id, r.title, r.first_picture_link, host.national_code , host.first_name , host.last_name
 FROM residence r INNER JOIN host ON r.host_id = host.national_code
 INNER JOIN rent ON rent.residence_id = r.residence_id
 INNER JOIN city ON city.city_id = r.city_id
@@ -239,13 +240,101 @@ WHERE res.residence_id = r.residence_id) DESC
 OFFSET 20 ROWS
 FETCH FIRST 20 ROW ONLY; 
 
+--3
+--======================
+
+SELECT r.residence_id, r.title, r.first_picture_link, host.national_code , host.first_name , host.last_name
+FROM residence r INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id
+
+WHERE r.residence_id NOT IN
+
+(SELECT r.residence_id
+FROM residence r
+INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id)
+AND city.city_name = 'Tabriz' AND r.capacity >= 4
+AND r.residence_type = 'apartment'
+AND EXISTS (SELECT * FROM residence_facility
+			INNER JOIN facility ON residence_facility.residence_facility_id = facility.facility_id
+		   WHERE residence_facility.residence_id = r.residence_id
+		   AND(facility.facility_name = 'free internet access' OR facility.facility_name = 'dedicated parking'))
+ 
+-- AND rent.rent_from < y AND rent.rent_to > x
+
+ORDER BY (SELECT AVG(comment.rating) FROM residence res
+INNER JOIN comment ON res.residence_id = comment.residence_id
+WHERE res.residence_id = r.residence_id) DESC
+
+LIMIT 20;
+
+--4
+--======================
+--1st west south coordinate --> (x1 , y1)
+--2nd east north coordinate --> (x2 , y2)
+SELECT r.residence_id, r.title, r.first_picture_link, host.national_code , host.first_name , host.last_name
+FROM residence r INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id
+
+WHERE r.residence_id NOT IN
+
+(SELECT r.residence_id
+FROM residence r
+INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id)
+AND city.city_name = 'Tabriz' AND r.capacity >= 4
+
+-- AND r.long > x1 AND r.long < x2 AND r.lat > y1 AND r.lat < y2
+
+-- AND rent.rent_from < y AND rent.rent_to > x
+
+ORDER BY (SELECT AVG(comment.rating) FROM residence res
+INNER JOIN comment ON res.residence_id = comment.residence_id
+WHERE res.residence_id = r.residence_id) DESC
+
+LIMIT 20;
+
+
+--5
+--=====================
+SELECT r.residence_id, r.title, r.first_picture_link, host.national_code , host.first_name , host.last_name
+FROM residence r INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id
+
+WHERE r.residence_id NOT IN
+
+(SELECT r.residence_id
+FROM residence r
+INNER JOIN host ON r.host_id = host.national_code
+INNER JOIN rent ON rent.residence_id = r.residence_id
+INNER JOIN city ON city.city_id = r.city_id)
+AND city.city_name = 'Tabriz' AND r.capacity >= 4
+AND r.residence_type = 'apartment'
+AND EXISTS (SELECT * FROM residence_facility
+			INNER JOIN facility ON residence_facility.residence_facility_id = facility.facility_id
+		   WHERE residence_facility.residence_id = r.residence_id
+		   AND(facility.facility_name = 'free internet access' OR facility.facility_name = 'dedicated parking'))
+ 
+-- AND rent.rent_from < y AND rent.rent_to > x
+
+ORDER BY r.price ASC
+
+LIMIT 20;
+
+
+
 -- 6
--- ======================
+--======================
 SELECT host.national_code, m.content, m.sent_time
-FROM message AS m
+FROM message AS m 
 INNER JOIN host on host.national_code = m.host_id
 -- WHERE message.guest_id = <guest_id>
-ORDER BY comment.sent_time DESC
+ORDER BY m.sent_time;
 
 --7
 -- ======================
@@ -254,14 +343,14 @@ FROM message AS m
 INNER JOIN host on host.national_code = m.host_id
 -- WHERE message.guest_id = <guest_id>
 -- AND message.host_id = <host_id>
-ORDER BY comment.sent_time DESC
+ORDER BY m.sent_time DESC;
 
 -- 8
 -- ======================
 SELECT rent.guest_id, g.first_name, g.last_name, rent.guest_count, rent.rent_from, rent.rent_to
 FROM guest AS g
-INNER JOIN rent ON rent.guest_id = guest.national_code
-WHERE rent.status = 'pending'
+INNER JOIN rent ON rent.guest_id = g.national_code
+WHERE rent.status = 'pending';
 
 -- 9
 -- ======================
