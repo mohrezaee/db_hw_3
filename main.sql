@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS residence_bed
 
 CREATE TABLE IF NOT EXISTS price_change
 (
-    change_from timestamp not NULL,
-    change_to timestamp NOT NULL,
+    change_from varchar(20) not NULL,
+    change_to varchar(20) NOT NULL,
     change_type varchar(8) NOT NULL CHECK(change_type in ('increase', 'discount')),
     change_percentage int NOT NULL CHECK (change_percentage > 0),
     residence_id serial UNIQUE,
