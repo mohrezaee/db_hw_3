@@ -10,9 +10,8 @@ FROM residence r
 INNER JOIN host ON r.host_id = host.national_code
 INNER JOIN rent ON rent.residence_id = r.residence_id
 INNER JOIN city ON city.city_id = r.city_id
-WHERE city.city_name = 'Tabriz' AND r.capacity >= 4
  
--- AND rent.rent_from < y AND rent.rent_to > x
+-- WHERE rent.rent_from < y AND rent.rent_to > x
 )
 AND city.city_name = 'Tabriz' AND r.capacity >= 4
  
