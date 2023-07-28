@@ -20,7 +20,6 @@ AND EXISTS (SELECT * FROM residence_facility
 		   WHERE residence_facility.residence_id = r.residence_id
 		   AND(facility.facility_name = 'free internet access' OR facility.facility_name = 'dedicated parking'))
  
--- AND rent.rent_from < y AND rent.rent_to > x
 
 ORDER BY (SELECT AVG(comment.rating) FROM residence res
 INNER JOIN comment ON res.residence_id = comment.residence_id
