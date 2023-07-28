@@ -19,4 +19,4 @@ ORDER BY (SELECT AVG(comment.rating) FROM residence res
 INNER JOIN comment ON res.residence_id = comment.residence_id
 WHERE res.residence_id = r.residence_id) DESC
 
-LIMIT 20; --FETCH FIRST 20 ROW ONLY;
+LIMIT 20;
