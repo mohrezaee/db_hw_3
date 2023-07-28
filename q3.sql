@@ -9,7 +9,10 @@ WHERE r.residence_id NOT IN
 FROM residence r
 INNER JOIN host ON r.host_id = host.national_code
 INNER JOIN rent ON rent.residence_id = r.residence_id
-INNER JOIN city ON city.city_id = r.city_id)
+INNER JOIN city ON city.city_id = r.city_id
+-- WHERE rent.rent_from < y AND rent.rent_to > x
+
+)
 AND city.city_name = 'Tabriz' AND r.capacity >= 4
 AND r.residence_type = 'apartment'
 AND EXISTS (SELECT * FROM residence_facility
